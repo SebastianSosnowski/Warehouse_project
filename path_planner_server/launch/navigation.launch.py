@@ -14,7 +14,16 @@ def generate_launch_description():
     map_file = os.path.join(get_package_share_directory('map_server'), 'config', 'turtlebot_area.yaml')
     nav2_yaml = os.path.join(get_package_share_directory('localization_server'), 'config', 'amcl_config.yaml')
 
-    # Choose correct config files
+    map_server_share = get_package_share_directory('map_server')
+    sim_map = os.path.join(map_server_share,'config','warehouse_map_sim.yaml')
+    real_map = os.path.join(map_server_share,'config','warehouse_map_real.yaml')
+    map_file = PythonExpression([
+        "'", sim_map,
+        "' if '", use_sim_time,
+        "' == 'True' else '", real_map,
+        "'"
+    ])
+
     bt_navigator_config = PythonExpression([
         "'", os.path.join(package_share, 'config', 'bt_navigator_sim.yaml'),
         "' if '", use_sim_time,
