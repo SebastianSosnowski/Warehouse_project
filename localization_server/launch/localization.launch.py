@@ -2,7 +2,8 @@ import os
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from ament_index_python.packages import get_package_share_directory
@@ -10,21 +11,18 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     localization_share = get_package_share_directory('localization_server')
-    map_server_share = get_package_share_directory('map_server')
-
-    default_map_file = os.path.join(
-        map_server_share,
-        'config',
-        'warehouse_map_sim.yaml'
-    )
 
     map_file_arg = DeclareLaunchArgument(
         'map_file',
-        default_value=default_map_file,
-        description='Path to the map YAML file'
+        default_value='warehouse_map_sim.yaml',
+        description='Map YAML filename'
     )
 
-    map_file = LaunchConfiguration('map_file')
+    map_file = PathJoinSubstitution([
+        FindPackageShare('map_server'),
+        'config',
+        LaunchConfiguration('map_file')
+    ])
 
     is_sim = PythonExpression([
         "'warehouse_map_sim' in '",
