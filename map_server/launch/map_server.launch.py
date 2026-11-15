@@ -2,23 +2,22 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    default_map_file = os.path.join(
-        get_package_share_directory('map_server'),
-        'config',
-        'warehouse_map_sim.yaml'
-    )
-
     map_file_arg = DeclareLaunchArgument(
         'map_file',
-        default_value=default_map_file,
-        description='Path to the map YAML file'
+        default_value='warehouse_map_sim.yaml',
+        description='Map YAML filename'
     )
 
-    map_file = LaunchConfiguration('map_file')
+    map_file = PathJoinSubstitution([
+        FindPackageShare('map_server'),
+        'config',
+        LaunchConfiguration('map_file')
+    ])
     rviz_file = os.path.join(get_package_share_directory('map_server'), 'rviz', 'map_display.rviz')
     # map_file = os.path.join(get_package_share_directory('map_server'), 'config', 'warehouse_map_sim.yaml')
     
@@ -27,9 +26,10 @@ def generate_launch_description():
             executable='map_server',
             name='map_server',
             output='screen',
-            parameters=[{'use_sim_time': True}, 
-                        {'yaml_filename':map_file} 
-                       ])
+            parameters=[{
+                'use_sim_time': True,
+                'yaml_filename': map_file
+            }])
     lifecycle_manager_node = Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
