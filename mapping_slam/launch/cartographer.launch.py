@@ -9,14 +9,14 @@ def generate_launch_description():
     use_sim_time_arg = DeclareLaunchArgument("use_sim_time", default_value='True')
     use_sim_time = LaunchConfiguration("use_sim_time")
 
-    cartographer_config_dir = os.path.join(get_package_share_directory('cartographer_slam'), 'config')
+    cartographer_config_dir = os.path.join(get_package_share_directory('mapping_slam'), 'config')
     configuration_basename = PythonExpression([
         "'cartographer_sim.lua' if '",
         use_sim_time,
         "' == 'True' else 'cartographer_real.lua'"
     ])
 
-    rviz_file = os.path.join(get_package_share_directory('cartographer_slam'), 'rviz', 'mapping.rviz')
+    rviz_file = os.path.join(get_package_share_directory('mapping_slam'), 'rviz', 'mapping.rviz')
 
     # configuration_basename = "cartographer_sim.lua"
     cartographer_node = Node(
