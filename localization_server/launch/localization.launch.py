@@ -2,7 +2,8 @@ import os
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution, Command
+from launch.conditions import UnlessCondition
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -31,6 +32,41 @@ def generate_launch_description():
     ])
 
     use_sim_time = ParameterValue(is_sim, value_type=bool)
+
+    robot_description_share = get_package_share_directory(
+        'rb1_ros2_description'
+    )
+
+    robot_description_file = os.path.join(
+        robot_description_share,
+        'xacro',
+        'rb1_ros2_base.urdf.xacro'
+    )
+
+    robot_description = ParameterValue(
+        Command([
+            'xacro ',
+            robot_description_file,
+            ' robot_name:=rb1'
+        ]),
+        value_type=str
+    )
+
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='rb1_robot_state_publisher',
+        output='screen',
+        parameters=[{
+            'robot_description': robot_description,
+            'use_sim_time': use_sim_time
+        }],
+        remappings=[
+            ('/robot_description', '/rb1_robot_description'),
+            ('/joint_states', '/rb1/joint_states')
+        ],
+        condition=UnlessCondition(is_sim)
+    )
 
     amcl_config_sim = os.path.join(
         localization_share, 'config', 'amcl_config_sim.yaml'
@@ -102,5 +138,6 @@ def generate_launch_description():
         map_server_node,
         amcl_node,
         lifecycle_manager_node,
-        rviz_node
+        rviz_node,
+        robot_state_publisher_node
     ])
